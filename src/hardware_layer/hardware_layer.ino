@@ -12,7 +12,7 @@ const int   daylightOffset_sec = 3600;   // summer time PL = +1h (winter time = 
 
 // hour and minute when servo should be moved
 const int TARGET_HOUR   = 1;
-const int TARGET_MINUTE = 28;
+const int TARGET_MINUTE = 12;
 
 // Servo Pin
 static const int servoPin = 13;
