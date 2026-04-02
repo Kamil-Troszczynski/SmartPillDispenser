@@ -2,9 +2,10 @@
 #include <ESP32Servo.h>
 #include <ESP32Time.h>
 #include "time.h"
+#include "access.ino"
 
-const char* ssid             = "AndroidAP";
-const char* password         = "yitc8652";
+const char* ssid             = WIFI_SSID;
+const char* password         = WIFI_PASSWORD;
 
 const char* ntpServer        = "pool.ntp.org";
 const long  gmtOffset_sec    = 0;
@@ -12,7 +13,7 @@ const int   daylightOffset_sec = 3600;   // summer time PL = +1h (winter time = 
 
 // hour and minute when servo should be moved
 const int TARGET_HOUR   = 1;
-const int TARGET_MINUTE = 12;
+const int TARGET_MINUTE = 26;
 
 // Servo Pin
 static const int servoPin = 13;
