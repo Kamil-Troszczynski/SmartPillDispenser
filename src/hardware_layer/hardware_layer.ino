@@ -18,7 +18,7 @@ const int SERVO_PINS[NUM_SERVOS] = { 13, 12, 14, 27 };
 const int BUTTON_PIN = 33;
 
 const int SERVO_START = 0;
-const int SERVO_END   = 90;
+const int SERVO_END   = 180;
 
 
 struct Schedule {
@@ -30,10 +30,10 @@ struct Schedule {
 
 
 const Schedule SCHEDULES[NUM_SERVOS] = {
-  {  2,  30, 2,  59 },   // Servo 0 (GPIO 13) - active 02:30-02:59
-  {  2,  35, 3,  3  },   // Servo 1 (GPIO 12) - active 02:35-03:03
-  {  2,  40, 2,  50 },   // Servo 2 (GPIO 14) - active 02:40-02:50
-  {  2,  45, 2,  55 },   // Servo 3 (GPIO 27) - active 02:45-02:55
+  {  13,  28, 13,  30 },   // Servo 0 (GPIO 13) - active 13:28-13:30
+  {  13,  35, 13,  37 },   // Servo 1 (GPIO 12) - active 13:35-13:37
+  {  13,  38, 13,  40 },   // Servo 2 (GPIO 14) - active 13:38-13:40
+  {  13,  41, 13,  43 },   // Servo 3 (GPIO 27) - active 13:41-13:43
 };
 
 
