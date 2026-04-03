@@ -4,36 +4,97 @@
 #include "time.h"
 #include "access.ino"
 
-const char* ssid             = WIFI_SSID;
-const char* password         = WIFI_PASSWORD;
 
-const char* ntpServer        = "pool.ntp.org";
-const long  gmtOffset_sec    = 0;
-const int   daylightOffset_sec = 3600;   // summer time PL = +1h (winter time = 0)
+const char* ssid              = WIFI_SSID;
+const char* password          = WIFI_PASSWORD;
+const char* ntpServer         = "pool.ntp.org";
+const long  gmtOffset_sec     = 0;
+const int   daylightOffset_sec = 3600;
 
-// hour and minute when servo should be moved
-const int TARGET_HOUR   = 1;
-const int TARGET_MINUTE = 26;
 
-// Servo Pin
-static const int servoPin = 13;
+const int NUM_SERVOS = 4;
 
-// Servo Positions
+const int SERVO_PINS[NUM_SERVOS] = { 13, 12, 14, 27 };
+const int BUTTON_PIN = 33;
+
 const int SERVO_START = 0;
 const int SERVO_END   = 90;
 
-Servo    myservo;
+
+struct Schedule {
+  int startHour;
+  int startMin;
+  int endHour;
+  int endMin;
+};
+
+
+const Schedule SCHEDULES[NUM_SERVOS] = {
+  {  2,  30, 2,  59 },   // Servo 0 (GPIO 13) - active 02:30-02:59
+  {  2,  35, 3,  3  },   // Servo 1 (GPIO 12) - active 02:35-03:03
+  {  2,  40, 2,  50 },   // Servo 2 (GPIO 14) - active 02:40-02:50
+  {  2,  45, 2,  55 },   // Servo 3 (GPIO 27) - active 02:45-02:55
+};
+
+
+Servo     servos[NUM_SERVOS];
 ESP32Time rtc(3600);
 
-bool servoMoved    = false;
-int  lastCheckedDay = -1;
+unsigned long lastPressTime = 0;
+const unsigned long DEBOUNCE_MS = 300;
 
 
-void syncTimeFromNTP() {
-  Serial.print("Connecting with WiFi...");
+int to_minutes(int hour, int min) {
+  return hour * 60 + min;
+}
+
+bool is_in_schedule(int servoIndex) {
+  int now   = to_minutes(rtc.getHour(true), rtc.getMinute());
+  int start = to_minutes(SCHEDULES[servoIndex].startHour, SCHEDULES[servoIndex].startMin);
+  int end   = to_minutes(SCHEDULES[servoIndex].endHour,   SCHEDULES[servoIndex].endMin);
+  return (now >= start && now < end);
+}
+
+void move_servo(int servoIndex) {
+  Serial.printf(">>> Servo %d: rotation to %d°\n", servoIndex, SERVO_END);
+  servos[servoIndex].write(SERVO_END);
+  delay(1000);
+  servos[servoIndex].write(SERVO_START);
+  Serial.printf(">>> Servo %d: home...\n", servoIndex);
+}
+
+void check_button() {
+  if (digitalRead(BUTTON_PIN) != LOW) return;
+  
+  unsigned long now = millis();
+  if (now - lastPressTime <= DEBOUNCE_MS) return;
+  lastPressTime = now;
+
+  // Find first servo in window schedule
+  bool anyActive = false;
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (is_in_schedule(i)) {
+      anyActive = true;
+      move_servo(i);
+      break;  // launch only first appropriate
+    }
+  }
+
+  if (!anyActive) {
+    Serial.println("Button clicked. No servo is in schedule");
+  }
+}
+
+void print_current_time() {
+  Serial.printf("RTC: %02d:%02d:%02d\n",
+                rtc.getHour(true), rtc.getMinute(), rtc.getSecond());
+}
+
+
+void sync_time_from_NTP() {
+  Serial.print("Connecting WiFi... ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
-
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {
     delay(500);
@@ -42,74 +103,46 @@ void syncTimeFromNTP() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\nWiFi connected. Requested time from NTP...");
+    Serial.println("\nConnected WiFi. Request time from NTP...");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-
     struct tm timeinfo;
     int retries = 0;
     while (!getLocalTime(&timeinfo) && retries < 10) {
       delay(500);
       retries++;
     }
-
     if (getLocalTime(&timeinfo)) {
       rtc.setTimeStruct(timeinfo);
-      Serial.println("Synchronised time with NTP");
-      Serial.println(&timeinfo, "Date/time: %A, %d %B %Y  %H:%M:%S");
+      Serial.println("Synchronised time");
+      Serial.println(&timeinfo, "Date/Time: %A, %d %B %Y  %H:%M:%S");
     } else {
-      Serial.println("Time from NTP not requested");
+      Serial.println("Request time from NTP failed");
     }
   } else {
-    Serial.println("\nNo WiFi connection, time not synchronised");
+    Serial.println("\nNo WiFi - time was not synchronised!");
   }
-
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   Serial.println("Turned off WiFi");
 }
 
-void checkAndMoveServo() {
-  int currentHour   = rtc.getHour(true); // 24h form
-  int currentMinute = rtc.getMinute();
-  int currentDay    = rtc.getDay();
-
-  if (currentDay != lastCheckedDay) {
-    servoMoved    = false;
-    lastCheckedDay = currentDay;
-    Serial.println("New day – servo's flag reset");
-  }
-
-  if (!servoMoved &&
-      currentHour   == TARGET_HOUR &&
-      currentMinute == TARGET_MINUTE)
-  {
-    Serial.println(">>> Target time, servo is moving...");
-    myservo.write(SERVO_END);
-    delay(1000);              
-    myservo.write(SERVO_START);
-    servoMoved = true;        
-    Serial.println(">>> Servo move back to start position");
-  }
-}
-
-void printCurrentTime() {
-  Serial.printf("Time RTC: %02d:%02d:%02d  |  day: %d\n",
-                rtc.getHour(true),
-                rtc.getMinute(),
-                rtc.getSecond(),
-                rtc.getDay());
-}
 
 void setup() {
   Serial.begin(115200);
-  myservo.attach(servoPin);
-  myservo.write(SERVO_START);
-
-  syncTimeFromNTP();
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    servos[i].attach(SERVO_PINS[i]);
+    servos[i].write(SERVO_START);
+  }
+  sync_time_from_NTP();
 }
 
+
 void loop() {
-  checkAndMoveServo();
-  printCurrentTime();
-  delay(1000);
+  check_button();
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 10000) {
+    lastPrint = millis();
+    print_current_time();
+  }
 }
