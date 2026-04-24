@@ -1,3 +1,4 @@
 .vscode
-/src/hardware_layer/build
-/src/hardware_layer/access.ino
+/include/access.hpp
+.pio
+/lib
