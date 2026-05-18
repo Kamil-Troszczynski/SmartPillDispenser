@@ -1,8 +1,9 @@
 // Include all libraries
-#include <ESP32Servo.h>
+#include <Adafruit_PWMServoDriver.h>
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include <WiFi.h>
+#include <Wire.h>
 #include <ESP32Time.h>
 
 #ifndef DFNS_CONSTS_DEFINED
@@ -55,10 +56,16 @@ const unsigned long DEBOUNCE_MS = 250;
 const int NUM_PERSONS = 3;
 
 
-// Servos
-const int NUM_SERVOS             = 4;
-const int SERVO_PINS[NUM_SERVOS] = { 13, 12, 14, 19 };
-const int SERVO_START            = 0;
-const int SERVO_END              = 180;
+// PCA9685 – kanały dla 3 serwomechanizmów (piny 1, 5, 9)
+const int NUM_SERVOS                = 4;
+const int SERVO_CHANNELS[NUM_SERVOS] = { 0, 4, 8, 12 };
+
+// Przelicznik kąt → pulse dla MG90S
+// MG90S: min ~150, max ~600 (przy 50Hz, 12-bit = 4096 kroków)
+const int SERVO_FREQ      = 50;    // Hz
+const int SERVO_MIN_PULSE = 150;   // pulse dla 0°
+const int SERVO_MAX_PULSE = 600;   // pulse dla 180°
+const int SERVO_START_DEG = 0;
+const int SERVO_END_DEG   = 180;
 
 #endif
