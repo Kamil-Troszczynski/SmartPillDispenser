@@ -10,7 +10,10 @@ void setup_up_servos(Adafruit_PWMServoDriver & pca){
   }
 }
 
+
 void move_servo(int servoIndex, Adafruit_PWMServoDriver& pca) {
+  // servoIndex: 1-based index for user-friendly input
+  servoIndex = servoIndex - 1;
   for (int pos = SERVO_MIN_PULSE; pos <= SERVO_MAX_PULSE; pos += 1) {
     pca.setPWM(SERVO_CHANNELS[servoIndex], 0, pos);
     delay(15);
