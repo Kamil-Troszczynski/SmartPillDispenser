@@ -16,18 +16,27 @@ bool is_in_window(int personIdx) {
 }
 
 
-void check_schedules() {
+bool check_schedules() {
   static int lastCheckedMinute = -1;
   int currentMinute = rtc.getHour(true) * 60 + rtc.getMinute();
-  if (currentMinute == lastCheckedMinute) return;
+  if (currentMinute == lastCheckedMinute) return false;
   lastCheckedMinute = currentMinute;
 
+  bool changed = false;
   for (int i = 0; i < NUM_PERSONS; i++) {
-    if (is_in_window(i) && !appState.buzzerAcked[i]) {
-      appState.buzzerActive[i] = true;
-    } else if (!is_in_window(i)) {
-      appState.buzzerActive[i] = false;
+    bool inWindow = is_in_window(i);
+    bool shouldBeActive = inWindow && !appState.buzzerAcked[i];
+
+    if (appState.buzzerActive[i] != shouldBeActive) {
+      appState.buzzerActive[i] = shouldBeActive;
+      changed = true;
+    }
+
+    if (!inWindow && appState.buzzerAcked[i]) {
       appState.buzzerAcked[i] = false;
+      changed = true;
     }
   }
+
+  return changed;
 }

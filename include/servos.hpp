@@ -4,6 +4,4 @@
 
 
 void setup_up_servos(Adafruit_PWMServoDriver & pca);
-
-
 void move_servo(int servoIndex, Adafruit_PWMServoDriver& pca);

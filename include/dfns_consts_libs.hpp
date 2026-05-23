@@ -1,5 +1,6 @@
 // Include all libraries
 #include <Adafruit_PWMServoDriver.h>
+#include <Adafruit_MCP23X17.h>
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include <WiFi.h>
@@ -31,6 +32,10 @@
 #define C_SCROLLBG   0xD69A
 #define C_SCROLLFG   0x025F
 
+#define MCP_BTN_UP   0
+#define MCP_BTN_DOWN 1
+#define MCP_BTN_OK   2 
+#define MCP_BUZZER   8
 
 // Screen consts
 const int HEADER_H = 18;
@@ -40,31 +45,16 @@ const int ROW_H = 33;
 const int VISIBLE_ROWS = 3;
 const int LIST_Y = HEADER_H;
 
-
-// Buttons
-const int BTN_UP   = 32;
-const int BTN_DOWN = 33;
-const int BTN_OK   = 25;
-
-
-// Buzzer
-const int BUZZER   = 26;
 const unsigned long DEBOUNCE_MS = 250;
 
-
-// Person number
 const int NUM_PERSONS = 3;
 
-
-// PCA9685 – kanały dla 3 serwomechanizmów (piny 1, 5, 9)
 const int NUM_SERVOS                = 4;
 const int SERVO_CHANNELS[NUM_SERVOS] = { 0, 4, 8, 12 };
 
-// Przelicznik kąt → pulse dla MG90S
-// MG90S: min ~150, max ~600 (przy 50Hz, 12-bit = 4096 kroków)
-const int SERVO_FREQ      = 50;    // Hz
-const int SERVO_MIN_PULSE = 150;   // pulse dla 0°
-const int SERVO_MAX_PULSE = 600;   // pulse dla 180°
+const int SERVO_FREQ      = 50;
+const int SERVO_MIN_PULSE = 150;
+const int SERVO_MAX_PULSE = 600;
 const int SERVO_START_DEG = 0;
 const int SERVO_END_DEG   = 180;
 

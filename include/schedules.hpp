@@ -2,7 +2,7 @@
 
 #include "dfns_consts_libs.hpp"
 #include "persons.hpp"
+#include "app_state.hpp"
 
-
-void check_schedules();
+bool check_schedules();
 bool is_in_window(int personIdx);

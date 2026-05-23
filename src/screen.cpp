@@ -21,6 +21,27 @@ void draw_header() {
 }
 
 
+void draw_sync_status(const char* line1, const char* line2, uint16_t bg, uint16_t fg) {
+  const int boxX = 8;
+  const int boxY = HEADER_H + 12;
+  const int boxW = SCREEN_W - 16;
+  const int boxH = 36;
+
+  tft.fillRoundRect(boxX, boxY, boxW, boxH, 4, bg);
+  tft.drawRoundRect(boxX, boxY, boxW, boxH, 4, fg);
+  tft.setTextSize(1);
+  tft.setTextColor(fg, bg);
+
+  tft.setCursor(boxX + 8, boxY + 9);
+  tft.print(line1);
+
+  if (line2 != nullptr && line2[0] != '\0') {
+    tft.setCursor(boxX + 8, boxY + 21);
+    tft.print(line2);
+  }
+}
+
+
 void draw_scrollbar(int scrollOffset) {
   if (NUM_PERSONS <= VISIBLE_ROWS) return;
   const int bar_x = SCREEN_W - 4;
@@ -67,13 +88,8 @@ void draw_person_row(int personIdx, int rowY, bool isSelected) {
     tft.fillRoundRect(SCREEN_W - 46, rowY + 8, 38, 14, 4, C_WARN_BG);
     tft.setTextColor(C_WARN_TXT, C_WARN_BG);
     tft.setCursor(SCREEN_W - 40, rowY + 12);
-    tft.print("PORA!");
-  } else if (inWindow) {
-    tft.fillRoundRect(SCREEN_W - 46, rowY + 8, 38, 14, 4, C_ACTIVE_BG);
-    tft.setTextColor(C_ACTIVE_TXT, C_ACTIVE_BG);
-    tft.setCursor(SCREEN_W - 34, rowY + 12);
-    tft.print("OK");
-  }
+    tft.print("Dawka");
+  } else if (inWindow) {}
   tft.drawFastHLine(0, rowY + ROW_H - 1, SCREEN_W, C_SEP);
 }
 
