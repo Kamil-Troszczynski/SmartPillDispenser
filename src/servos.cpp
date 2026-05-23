@@ -1,10 +1,30 @@
 #include "servos.hpp"
-#include "dfns_consts_libs.hpp"
 
 
-void move_servo(int servoIndex, Servo (&servos)[NUM_SERVOS]) {
-  if (servoIndex < 0 || servoIndex >= NUM_SERVOS) return;
-  servos[servoIndex].write(SERVO_END);
-  delay(1000);
-  servos[servoIndex].write(SERVO_START);
+void setup_up_servos(Adafruit_PWMServoDriver & pca){
+  pca.begin();
+  pca.setPWMFreq(SERVO_FREQ);
+
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    pca.setPWM(SERVO_CHANNELS[i], 0, SERVO_MIN_PULSE);
+  }
+}
+
+
+void move_servo(int servoIndex, Adafruit_PWMServoDriver& pca) {
+  // servoIndex: 1-based index for user-friendly input
+  servoIndex = servoIndex - 1;
+  for (int pos = SERVO_MIN_PULSE; pos <= SERVO_MAX_PULSE; pos += 1) {
+    pca.setPWM(SERVO_CHANNELS[servoIndex], 0, pos);
+    delay(15);
+  }
+ 
+  delay(2000);
+ 
+  for (int pos = SERVO_MAX_PULSE; pos >= SERVO_MIN_PULSE; pos -= 1) {
+    pca.setPWM(SERVO_CHANNELS[servoIndex], 0, pos);
+    delay(15);
+  }
+ 
+  delay(2000);
 }
