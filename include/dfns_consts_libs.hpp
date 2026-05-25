@@ -47,7 +47,7 @@ const int LIST_Y = HEADER_H;
 
 const unsigned long DEBOUNCE_MS = 250;
 
-const int NUM_PERSONS = 3;
+const int NUM_PERSONS = 4;
 
 const int NUM_SERVOS                = 4;
 const int SERVO_CHANNELS[NUM_SERVOS] = { 0, 4, 8, 12 };

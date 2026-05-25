@@ -84,7 +84,13 @@ void draw_person_row(int personIdx, int rowY, bool isSelected) {
   tft.setCursor(7, rowY + 18);
   tft.print(schedule);
 
-  if (buzzing) {
+  if (appState.doseDelivered[personIdx]) {}
+  else if (appState.waitingForSensor[personIdx]) {
+    tft.fillRoundRect(SCREEN_W - 46, rowY + 8, 38, 14, 4, C_WARN_BG);
+    tft.setTextColor(C_WARN_TXT, C_WARN_BG);
+    tft.setCursor(SCREEN_W - 40, rowY + 12);
+    tft.print("Dawka");
+  } else if (buzzing) {
     tft.fillRoundRect(SCREEN_W - 46, rowY + 8, 38, 14, 4, C_WARN_BG);
     tft.setTextColor(C_WARN_TXT, C_WARN_BG);
     tft.setCursor(SCREEN_W - 40, rowY + 12);

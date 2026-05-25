@@ -47,10 +47,13 @@ void handle_buttons_mcp(Adafruit_MCP23X17 & mcp, Adafruit_PWMServoDriver & pca) 
     appState.lastBtnTime = now;
     int idx = appState.selectedIndex;
     if (is_in_window(idx)) {
-      appState.buzzerActive[idx] = false;
-      appState.buzzerAcked[idx]  = true;
-      move_servo(persons[idx].servoIndex, pca);
-      Serial.printf("Lek podany: %s\n", persons[idx].name);
+        appState.buzzerActive[idx] = false;
+        appState.buzzerAcked[idx]  = true;
+        appState.doseDelivered[idx] = false;
+        move_servo(persons[idx].servoIndex, pca);
+        appState.waitingForSensor[idx] = true;
+        Serial.printf("Wyrzut tabletki: %s\n", persons[idx].name);
+
     } else {
       Serial.printf("%s: poza oknem harmonogramu\n", persons[idx].name);
     }

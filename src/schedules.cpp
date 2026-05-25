@@ -36,6 +36,10 @@ bool check_schedules() {
       appState.buzzerAcked[i] = false;
       changed = true;
     }
+
+    if (!inWindow) {
+      appState.doseDelivered[i] = false;
+    }
   }
 
   return changed;
