@@ -18,10 +18,10 @@ Adafruit_PWMServoDriver pca;
 Adafruit_MCP23X17 mcp;
 
 
-const int NUM_SENSORS = 1;
-const int SENSOR_PINS[NUM_SENSORS]    = { 13 };
-const char* SENSOR_NAMES[NUM_SENSORS] = { "Sensor 1" };
-int lastSensorState[NUM_SENSORS]      = { 0 };
+const int NUM_SENSORS = 4;
+const int SENSOR_PINS[NUM_SENSORS]    = { 13, 12, 14, 27 };
+const char* SENSOR_NAMES[NUM_SENSORS] = { "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4" };
+int lastSensorState[NUM_SENSORS]      = { 0, 0, 0, 0 };
 
 
 void setup_sensors() {
@@ -40,18 +40,15 @@ void handle_sensors() {
     if (!state && lastSensorState[i]) {
 
       Serial.printf("[%s] Signal interrupted!\n", SENSOR_NAMES[i]);
-      for (int p = 0; p < NUM_PERSONS; p++) {
-
-        if (appState.waitingForSensor[p]) {
-
-          appState.waitingForSensor[p] = false;
-          appState.doseDelivered[p] = true;
-
-          Serial.printf("Dose delivered for %s\n", persons[p].name);
-
-          draw_ui();
-          break;
-        }
+      
+      // Czujnik i mapuje się na osobę i
+      if (i < NUM_PERSONS && appState.waitingForSensor[i]) {
+        appState.waitingForSensor[i] = false;
+        appState.doseDelivered[i] = true;
+        Serial.printf("Dose delivered for %s\n", persons[i].name);
+        draw_ui();
+      } else if (i < NUM_PERSONS) {
+        Serial.printf("Sensor %d triggered but no one waiting\n", i);
       }
     }
 
