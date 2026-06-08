@@ -37,6 +37,9 @@
 #define MCP_BTN_OK   2 
 #define MCP_BUZZER   8
 
+// Pin ESP32 podlaczony do INTA na MCP23017 (musi byc RTC GPIO: 0,2,4,12-15,25-27,32-39)
+#define MCP_INT_PIN  15
+
 // Screen consts
 const int HEADER_H = 18;
 const int FOOTER_Y = 118;
@@ -44,6 +47,14 @@ const int FOOTER_H = 10;
 const int ROW_H = 33;
 const int VISIBLE_ROWS = 3;
 const int LIST_Y = HEADER_H;
+
+// Widok szczegolow lekow
+const int DETAIL_LIST_Y      = HEADER_H + 4 + 14 + 4;
+const int DETAIL_ACTION_Y    = FOOTER_Y - 22;
+const int DETAIL_LIST_BOTTOM = DETAIL_ACTION_Y - 4;
+const int DETAIL_ROW_PITCH   = 20;
+const int DETAIL_ROW_H       = 18;
+const int VISIBLE_DETAIL_ROWS = max(1, (DETAIL_LIST_BOTTOM - DETAIL_LIST_Y) / DETAIL_ROW_PITCH);
 
 const unsigned long DEBOUNCE_MS = 250;
 

@@ -2,6 +2,7 @@
 #include "persons.hpp"
 #include "screen.hpp"
 #include "app_state.hpp"
+#include "power.hpp"
 #include <WiFi.h>
 
 static WiFiClient    espClient;
@@ -74,6 +75,7 @@ static void processSync(const char* message, unsigned int length) {
 
     syncReceived = true;
     Serial.printf("MQTT sync: załadowano %d użytkowników\n", NUM_PERSONS);
+    power_notify_user_activity();
     draw_ui();
 }
 

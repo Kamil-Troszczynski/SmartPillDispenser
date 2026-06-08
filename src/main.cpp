@@ -114,6 +114,7 @@
 #include "buttons.hpp"
 #include "servos.hpp"
 #include "schedules.hpp"
+#include "power.hpp"
 
 #define BROKER_HOST "192.168.161.76"
 #define BROKER_PORT 1883
@@ -140,6 +141,7 @@ void setup() {
     mcp.pinMode(MCP_BTN_UP,   INPUT_PULLUP);
     mcp.pinMode(MCP_BTN_DOWN, INPUT_PULLUP);
     mcp.pinMode(MCP_BTN_OK,   INPUT_PULLUP);
+    buttons_init_mcp(mcp);
 
     Serial.printf("Stan poczatkowy: UP=%d DOWN=%d OK=%d\n",
     mcp.digitalRead(MCP_BTN_UP),
@@ -165,16 +167,8 @@ void setup() {
             mqtt_loop();
             delay(50);
         }
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-    mqtt_init(BROKER_HOST, BROKER_PORT, TOPIC_SYNC, TOPIC_CONF);
-    unsigned long t = millis();
-    while (!syncReceived && millis() - t < 5000) {
-        mqtt_loop();
-        delay(50);
-    }
-    Serial.printf("syncReceived=%d NUM_PERSONS=%d\n", syncReceived, NUM_PERSONS);
+        Serial.printf("syncReceived=%d NUM_PERSONS=%d\n", syncReceived, NUM_PERSONS);
+        power_init(mcp);
     }
 
     draw_ui();
@@ -182,20 +176,11 @@ void setup() {
 
 void loop() {
     mqtt_loop();
-    handle_buttons_mcp(mcp);
 
-    // Tymczasowo w loop() – usuń po diagnozie
-Serial.printf("UP=%d DOWN=%d OK=%d\n",
-    mcp.digitalRead(MCP_BTN_UP),
-    mcp.digitalRead(MCP_BTN_DOWN),
-    mcp.digitalRead(MCP_BTN_OK));
-delay(200);
+    if (power_should_poll_buttons())
+        handle_buttons_mcp(mcp);
 
     if (check_schedules()) draw_ui();
 
-    static unsigned long lastRefresh = 0;
-    if (millis() - lastRefresh > 10000) {
-      lastRefresh = millis();
-      draw_ui();
-    }
+    power_tick(mcp);
 }

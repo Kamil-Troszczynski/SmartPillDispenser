@@ -44,3 +44,45 @@ bool check_schedules() {
 
   return changed;
 }
+
+
+static uint64_t us_until_next_minute() {
+    int sec = rtc.getSecond();
+    return (uint64_t)(60 - sec) * 1000000ULL;
+}
+
+
+uint64_t us_until_next_schedule_wake() {
+    const uint64_t maxSleep = 60 * 1000000ULL;
+    const uint64_t minSleep = 100000ULL;
+
+    uint64_t sleepUs = us_until_next_minute();
+
+    int nowMin = rtc.getHour(true) * 60 + rtc.getMinute();
+    int nowSec = rtc.getSecond();
+    int bestDeltaMin = -1;
+
+    for (int i = 0; i < NUM_PERSONS; i++) {
+        Person& p = persons[i];
+        for (int e = 0; e < p.numEvents; e++) {
+            int hh = 0, mm = 0, ss = 0;
+            sscanf(p.events[e].time, "%d:%d:%d", &hh, &mm, &ss);
+            int evMin = hh * 60 + mm;
+            int deltaMin = evMin - nowMin;
+            if (deltaMin < 0) continue;
+            if (bestDeltaMin < 0 || deltaMin < bestDeltaMin)
+                bestDeltaMin = deltaMin;
+        }
+    }
+
+    if (bestDeltaMin >= 0) {
+        int deltaSec = bestDeltaMin * 60 - nowSec;
+        if (deltaSec < 1) deltaSec = 1;
+        uint64_t doseUs = (uint64_t)deltaSec * 1000000ULL;
+        if (doseUs < sleepUs) sleepUs = doseUs;
+    }
+
+    if (sleepUs > maxSleep) sleepUs = maxSleep;
+    if (sleepUs < minSleep) sleepUs = minSleep;
+    return sleepUs;
+}
