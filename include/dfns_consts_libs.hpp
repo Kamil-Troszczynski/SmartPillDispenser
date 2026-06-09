@@ -70,8 +70,8 @@ const int NUM_SERVOS                = 4;
 const int SERVO_CHANNELS[NUM_SERVOS] = { 0, 4, 8, 12 };
 
 const int SERVO_FREQ      = 50;
-const int SERVO_MIN_PULSE = 150;
-const int SERVO_MAX_PULSE = 600;
+const int SERVO_MIN_PULSE = 100;
+const int SERVO_MAX_PULSE = 500;
 const int SERVO_START_DEG = 0;
 const int SERVO_END_DEG   = 180;
 
