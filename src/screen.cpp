@@ -4,6 +4,27 @@
 #include "schedules.hpp"
 #include "power.hpp"
 
+static void draw_scrollbar(int scrollOffset) {
+    if (NUM_PERSONS <= VISIBLE_ROWS) return;
+    const int bar_x = SCREEN_W - 4;
+    const int bar_y = LIST_Y;
+    const int bar_h = VISIBLE_ROWS * ROW_H;
+    int thumb_h = max(8, bar_h * VISIBLE_ROWS / NUM_PERSONS);
+    int thumb_y = bar_y + (bar_h - thumb_h) * scrollOffset / max(1, NUM_PERSONS - VISIBLE_ROWS);
+    tft.fillRect(bar_x, bar_y, 4, bar_h, C_SCROLLBG);
+    tft.fillRect(bar_x, thumb_y, 4, thumb_h, C_SCROLLFG);
+}
+
+static void draw_detail_scrollbar(int scrollOffset, int totalItems) {
+    if (totalItems <= VISIBLE_DETAIL_ROWS) return;
+    const int bar_x = SCREEN_W - 4;
+    const int bar_y = DETAIL_LIST_Y;
+    const int bar_h = VISIBLE_DETAIL_ROWS * DETAIL_ROW_PITCH;
+    int thumb_h = max(6, bar_h * VISIBLE_DETAIL_ROWS / totalItems);
+    int thumb_y = bar_y + (bar_h - thumb_h) * scrollOffset / max(1, totalItems - VISIBLE_DETAIL_ROWS);
+    tft.fillRect(bar_x, bar_y, 4, bar_h, C_SCROLLBG);
+    tft.fillRect(bar_x, thumb_y, 4, thumb_h, C_SCROLLFG);
+}
 
 void draw_header() {
     tft.fillRect(0, 0, SCREEN_W, HEADER_H, C_HEADER_BG);
@@ -19,7 +40,6 @@ void draw_header() {
     tft.drawFastHLine(0, HEADER_H, SCREEN_W, C_SEP);
 }
 
-
 void draw_sync_status(const char* line1, const char* line2, uint16_t bg, uint16_t fg) {
     const int boxX = 8;
     const int boxY = HEADER_H + 12;
@@ -32,39 +52,9 @@ void draw_sync_status(const char* line1, const char* line2, uint16_t bg, uint16_
     tft.setTextColor(fg, bg);
     tft.setCursor(boxX + 8, boxY + 9);
     tft.print(line1);
-
-    if (line2 != nullptr && line2[0] != '\0') {
-        tft.setCursor(boxX + 8, boxY + 21);
-        tft.print(line2);
-    }
+    if (line2 && line2[0])
+        tft.setCursor(boxX + 8, boxY + 21), tft.print(line2);
 }
-
-
-void draw_scrollbar(int scrollOffset) {
-    if (NUM_PERSONS <= VISIBLE_ROWS) return;
-    const int bar_x = SCREEN_W - 4;
-    const int bar_y = LIST_Y;
-    const int bar_h = VISIBLE_ROWS * ROW_H;
-    int thumb_h = max(8, bar_h * VISIBLE_ROWS / NUM_PERSONS);
-    int thumb_y = bar_y + (bar_h - thumb_h) * scrollOffset / max(1, NUM_PERSONS - VISIBLE_ROWS);
-
-    tft.fillRect(bar_x, bar_y, 4, bar_h, C_SCROLLBG);
-    tft.fillRect(bar_x, thumb_y, 4, thumb_h, C_SCROLLFG);
-}
-
-
-void draw_detail_scrollbar(int scrollOffset, int totalItems) {
-    if (totalItems <= VISIBLE_DETAIL_ROWS) return;
-    const int bar_x = SCREEN_W - 4;
-    const int bar_y = DETAIL_LIST_Y;
-    const int bar_h = VISIBLE_DETAIL_ROWS * DETAIL_ROW_PITCH;
-    int thumb_h = max(6, bar_h * VISIBLE_DETAIL_ROWS / totalItems);
-    int thumb_y = bar_y + (bar_h - thumb_h) * scrollOffset / max(1, totalItems - VISIBLE_DETAIL_ROWS);
-
-    tft.fillRect(bar_x, bar_y, 4, bar_h, C_SCROLLBG);
-    tft.fillRect(bar_x, thumb_y, 4, thumb_h, C_SCROLLFG);
-}
-
 
 void sync_detail_scroll(int numEvents) {
     int sel = appState.detailSelectedIndex;
@@ -80,41 +70,24 @@ void sync_detail_scroll(int numEvents) {
         appState.detailScrollOffset = maxOffset;
 }
 
-
-// czy osoba ma aktywną dawkę do podania
-bool person_needs_dose(int personIdx) {
+static void draw_person_row(int personIdx, int rowY, bool isSelected) {
     Person& p = persons[personIdx];
-    int nowMin = rtc.getHour(true) * 60 + rtc.getMinute();
-    for (int e = 0; e < p.numEvents; e++) {
-        int hh, mm, ss;
-        sscanf(p.events[e].time, "%d:%d:%d", &hh, &mm, &ss);
-        int evMin = hh * 60 + mm;
-        if (nowMin >= evMin && nowMin < evMin + 5) return true;
-    }
-    return false;
-}
-
-
-void draw_person_row(int personIdx, int rowY, bool isSelected) {
-    Person& p = persons[personIdx];
-    bool needsDose = person_needs_dose(personIdx);
-    bool buzzing   = appState.buzzerActive[personIdx];
-    bool showDose  = needsDose || buzzing || appState.waitingForSensor[personIdx];
+    bool showDose = is_in_dose_window(personIdx)
+        || appState.buzzerActive[personIdx]
+        || appState.waitingForSensor[personIdx];
 
     uint16_t rowBg = (personIdx % 2 == 0) ? C_ROW_EVEN : C_ROW_ODD;
     if (isSelected) rowBg = C_SELECT_BG;
     tft.fillRect(0, rowY, SCREEN_W, ROW_H, rowBg);
 
-    if (isSelected) {
+    if (isSelected)
         tft.fillRect(0, rowY, 3, ROW_H, C_SELECT_ACC);
-    }
 
     tft.setTextSize(1);
     tft.setTextColor(isSelected ? C_SELECT_ACC : C_TEXT, rowBg);
-    tft.setCursor(7, rowY + ROW_H / 2 - 4);  // wyśrodkowany pionowo — samo imię
+    tft.setCursor(7, rowY + ROW_H / 2 - 4);
     tft.print(p.name);
 
-    // badge "Dawka" przy imieniu jeśli aktywna
     if (showDose && !appState.doseDelivered[personIdx]) {
         tft.fillRoundRect(SCREEN_W - 46, rowY + 8, 38, 14, 4, C_WARN_BG);
         tft.setTextColor(C_WARN_TXT, C_WARN_BG);
@@ -125,7 +98,7 @@ void draw_person_row(int personIdx, int rowY, bool isSelected) {
     tft.drawFastHLine(0, rowY + ROW_H - 1, SCREEN_W, C_SEP);
 }
 
-void draw_person_detail(int personIdx) {
+static void draw_person_detail(int personIdx) {
     Person& p = persons[personIdx];
     int nowMin = rtc.getHour(true) * 60 + rtc.getMinute();
 
@@ -167,16 +140,14 @@ void draw_person_detail(int personIdx) {
         uint16_t rowFg = isCursorHere ? C_SELECT_ACC : (active ? C_WARN_TXT : C_TEXT);
 
         tft.fillRoundRect(boxX, y, boxW, DETAIL_ROW_H, 3, rowBg);
-        if (isCursorHere) {
+        if (isCursorHere)
             tft.fillRect(boxX, y, 3, DETAIL_ROW_H, C_SELECT_ACC);
-        } else {
+        else
             tft.drawRoundRect(boxX, y, boxW, DETAIL_ROW_H, 3, active ? C_WARN_TXT : C_SEP);
-        }
 
         tft.drawRect(boxX + 6, y + 3, 12, 12, rowFg);
-        if (isChecked) {
+        if (isChecked)
             tft.fillRect(boxX + 8, y + 5, 8, 8, rowFg);
-        }
 
         tft.setTextSize(1);
         tft.setTextColor(rowFg, rowBg);
@@ -205,11 +176,10 @@ void draw_person_detail(int personIdx) {
         uint16_t btnBg = selected ? C_SELECT_BG : C_ROW_EVEN;
         uint16_t btnFg = selected ? C_SELECT_ACC : C_TEXT;
         tft.fillRoundRect(btnX, DETAIL_ACTION_Y, btnW, 18, 3, btnBg);
-        if (selected) {
+        if (selected)
             tft.fillRect(btnX, DETAIL_ACTION_Y, 3, 18, C_SELECT_ACC);
-        } else {
+        else
             tft.drawRoundRect(btnX, DETAIL_ACTION_Y, btnW, 18, 3, C_SEP);
-        }
         tft.setTextColor(btnFg, btnBg);
         tft.setCursor(btnX + (btnW / 2) - (strlen(label) * 3), DETAIL_ACTION_Y + 5);
         tft.print(label);
@@ -228,13 +198,7 @@ void draw_footer() {
     tft.setTextColor(C_FOOTER_TXT, C_FOOTER_BG);
     tft.setTextSize(1);
     tft.setCursor(4, FOOTER_Y + 2);
-    
-    // Dynamiczny tekst w zależności od widoku
-    if (appState.detailView) {
-        tft.print("UP/DN-kursor OK-akcja");
-    } else {
-        tft.print("UP/DN-wybor  OK-pokaz leki");
-    }
+    tft.print(appState.detailView ? "UP/DN-kursor OK-akcja" : "UP/DN-wybor  OK-pokaz leki");
 }
 
 void draw_ui() {

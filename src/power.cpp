@@ -38,6 +38,7 @@ static bool can_light_sleep() {
 
 static void display_sleep_hw() {
     if (!appState.displayOn) return;
+    tft.fillScreen(C_SLEEP);
     tft.writecommand(ST7735_DISPOFF);
     delay(5);
     tft.writecommand(ST7735_SLPIN);
@@ -75,10 +76,8 @@ void power_init(Adafruit_MCP23X17& mcp) {
     appState.lastUserActivityMs = millis();
     lastClockMinute = rtc.getHour(true) * 60 + rtc.getMinute();
 
-    if (WiFi.status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED)
         WiFi.setSleep(true);
-        Serial.println("Power: WiFi modem sleep ON");
-    }
 }
 
 void power_notify_user_activity() {

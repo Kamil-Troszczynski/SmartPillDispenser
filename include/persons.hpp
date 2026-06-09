@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Arduino.h>
 
 #define MAX_PERSONS 16
@@ -6,25 +7,17 @@
 
 struct DispenseEvent {
     char name[32];
-    char time[10];
+    char time[16];
     int dosage;
     int dts_id;
-    bool checked = false;
+    int chamberNumber; 
+    bool checked;
 };
 
 struct Person {
     char name[32];
-    int  servoIndex;
-    int  chamberNumber;
-
-    // okno harmonogramu (pierwsze zdarzenie dnia)
-    int  buzzerStartHour;
-    int  buzzerStartMin;
-    int  buzzerEndHour;
-    int  buzzerEndMin;
-
+    int numEvents;
     DispenseEvent events[MAX_EVENTS_PER_PERSON];
-    int           numEvents;
 };
 
 extern Person persons[MAX_PERSONS];

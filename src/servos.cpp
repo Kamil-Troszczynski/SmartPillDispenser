@@ -1,40 +1,39 @@
 #include "servos.hpp"
+#include "persons.hpp"
 
 static void move_servo_channel(uint8_t channel, Adafruit_PWMServoDriver& pca) {
-    for (int pos = SERVO_MIN_PULSE; pos <= SERVO_MAX_PULSE; pos += 2) {
-        pca.setPWM(channel, 0, pos);
-        delay(5);
-    }
     pca.setPWM(channel, 0, SERVO_MAX_PULSE);
-    delay(300);
-
-    for (int pos = SERVO_MAX_PULSE; pos >= SERVO_MIN_PULSE; pos -= 2) {
-        pca.setPWM(channel, 0, pos);
-        delay(5);
-    }
+    delay(800);
     pca.setPWM(channel, 0, SERVO_MIN_PULSE);
-    delay(300);
-}
-
-static void home_servo_channel(uint8_t channel, Adafruit_PWMServoDriver& pca) {
-    for (int pos = SERVO_MAX_PULSE; pos >= SERVO_MIN_PULSE; pos -= 2) {
-        pca.setPWM(channel, 0, pos);
-        delay(5);
-    }
-    pca.setPWM(channel, 0, SERVO_MIN_PULSE);
-    delay(300);
+    delay(800);
 }
 
 void setup_up_servos(Adafruit_PWMServoDriver& pca) {
     pca.begin();
     pca.setPWMFreq(SERVO_FREQ);
-    home_servo_channel(SERVO_DISPENSE_CHANNEL, pca);
+    for (int i = 0; i < NUM_DISPENSERS; i++)
+        pca.setPWM(SERVO_CHANNELS[i], 0, SERVO_MIN_PULSE);
 }
 
-void dispense_servo(Adafruit_PWMServoDriver& pca) {
-    move_servo_channel(SERVO_DISPENSE_CHANNEL, pca);
+int event_dispenser_slot(int personIdx, int eventIdx) {
+    if (personIdx < 0 || personIdx >= NUM_PERSONS) return 0;
+    if (eventIdx < 0 || eventIdx >= persons[personIdx].numEvents) return 0;
+    int chamber = persons[personIdx].events[eventIdx].chamberNumber;
+    int slot = chamber - 1;
+
+    if (slot < 0 || slot >= NUM_DISPENSERS) {
+        Serial.print("BLAD: Komora poza zakresem! Wymuszam 0.");
+        slot = 0; 
+    }
+    return slot;
 }
 
-void home_servo(Adafruit_PWMServoDriver& pca) {
-    home_servo_channel(SERVO_DISPENSE_CHANNEL, pca);
+void dispense_servo(Adafruit_PWMServoDriver& pca, int personIdx, int eventIdx) {
+    int slot = event_dispenser_slot(personIdx, eventIdx);
+    
+    Serial.print("Wyrzut tabletki: "); 
+    Serial.print(persons[personIdx].name);
+    Serial.print(" (slot "); Serial.print(slot); Serial.println(")");
+    
+    move_servo_channel(SERVO_CHANNELS[slot], pca);
 }
