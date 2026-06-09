@@ -160,7 +160,7 @@ void buttons_after_wake(Adafruit_MCP23X17& mcp) {
     mcp.clearInterrupts();
 }
 
-void handle_buttons_mcp(Adafruit_MCP23X17& mcp) {
+void handle_buttons_mcp(Adafruit_MCP23X17& mcp, Adafruit_PWMServoDriver& pca) {
     static bool initialized = false;
     static bool lastBtnUp   = false;
     static bool lastBtnDown = false;
@@ -233,7 +233,7 @@ void handle_buttons_mcp(Adafruit_MCP23X17& mcp) {
             if (sel < p.numEvents) {
                 p.events[sel].checked = !p.events[sel].checked;
             } else if (sel == p.numEvents) {
-                if (!is_in_window(idx)) {
+                if (!is_in_dose_window(idx)) {
                     Serial.printf("%s: poza oknem harmonogramu\n", p.name);
                 } else {
                     bool anyChecked = false;
@@ -251,6 +251,7 @@ void handle_buttons_mcp(Adafruit_MCP23X17& mcp) {
                                 p.events[e].checked = false;
                             }
                         }
+                        dispense_servo(pca);
                         Serial.printf("Wyrzut tabletki: %s\n", p.name);
                     }
                 }

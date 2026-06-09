@@ -4,6 +4,7 @@
 #include "persons.hpp"
 #include "screen.hpp"
 #include "buttons.hpp"
+#include "servos.hpp"
 #include "dfns_consts_libs.hpp"
 #include "esp_sleep.h"
 
@@ -16,7 +17,7 @@ static bool any_schedule_activity() {
     for (int i = 0; i < NUM_PERSONS; i++) {
         if (appState.buzzerActive[i] || appState.waitingForSensor[i])
             return true;
-        if (is_in_window(i) && !appState.buzzerAcked[i])
+        if (is_in_dose_window(i) && !appState.buzzerAcked[i])
             return true;
     }
     return false;
@@ -52,7 +53,8 @@ static void display_wake_hw() {
     appState.displayOn = true;
 }
 
-static void enter_light_sleep(uint64_t sleepUs, Adafruit_MCP23X17& mcp) {
+static void enter_light_sleep(uint64_t sleepUs, Adafruit_MCP23X17& mcp,
+                              Adafruit_PWMServoDriver& pca) {
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     esp_sleep_enable_timer_wakeup(sleepUs);
     esp_sleep_enable_ext0_wakeup((gpio_num_t)MCP_INT_PIN, 0);
@@ -63,7 +65,7 @@ static void enter_light_sleep(uint64_t sleepUs, Adafruit_MCP23X17& mcp) {
 
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
         power_notify_user_activity();
-        handle_buttons_mcp(mcp);
+        handle_buttons_mcp(mcp, pca);
     }
 }
 
@@ -92,7 +94,7 @@ bool power_should_poll_buttons() {
     return display_should_be_on() || !can_light_sleep();
 }
 
-void power_tick(Adafruit_MCP23X17& mcp) {
+void power_tick(Adafruit_MCP23X17& mcp, Adafruit_PWMServoDriver& pca) {
     if (display_should_be_on()) {
         if (!appState.displayOn) {
             display_wake_hw();
@@ -116,5 +118,5 @@ void power_tick(Adafruit_MCP23X17& mcp) {
         return;
     }
 
-    enter_light_sleep(us_until_next_schedule_wake(), mcp);
+    enter_light_sleep(us_until_next_schedule_wake(), mcp, pca);
 }

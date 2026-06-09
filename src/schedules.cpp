@@ -16,6 +16,20 @@ bool is_in_window(int personIdx) {
 }
 
 
+bool is_in_dose_window(int personIdx) {
+    if (personIdx < 0 || personIdx >= NUM_PERSONS) return false;
+    int nowMin = rtc.getHour(true) * 60 + rtc.getMinute();
+    Person& p = persons[personIdx];
+    for (int e = 0; e < p.numEvents; e++) {
+        int hh = 0, mm = 0, ss = 0;
+        sscanf(p.events[e].time, "%d:%d:%d", &hh, &mm, &ss);
+        int evMin = hh * 60 + mm;
+        if (nowMin >= evMin && nowMin < evMin + 5) return true;
+    }
+    return false;
+}
+
+
 bool check_schedules() {
   static int lastCheckedMinute = -1;
   int currentMinute = rtc.getHour(true) * 60 + rtc.getMinute();
@@ -24,7 +38,7 @@ bool check_schedules() {
 
   bool changed = false;
   for (int i = 0; i < NUM_PERSONS; i++) {
-    bool inWindow = is_in_window(i);
+    bool inWindow = is_in_dose_window(i);
     bool shouldBeActive = inWindow && !appState.buzzerAcked[i];
 
     if (appState.buzzerActive[i] != shouldBeActive) {

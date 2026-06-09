@@ -40,6 +40,12 @@
 // Pin ESP32 podlaczony do INTA na MCP23017 (musi byc RTC GPIO: 0,2,4,12-15,25-27,32-39)
 #define MCP_INT_PIN  15
 
+// Fotokomorka (receiver) – przerwanie wiazki = LOW
+#define SENSOR_PIN   25
+
+// Serwo wyrzutu – kanal 0 na PCA9685
+#define SERVO_DISPENSE_CHANNEL 0
+
 // Screen consts
 const int HEADER_H = 18;
 const int FOOTER_Y = 118;
