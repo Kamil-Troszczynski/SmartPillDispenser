@@ -5,19 +5,21 @@
 
 
 struct AppState {
-  // UI navigation
-  int selectedIndex = 0;
-  int scrollOffset = 0;
-
-  // Buzzer state
-  bool buzzerActive[NUM_PERSONS] = {false};
-  bool buzzerAcked[NUM_PERSONS] = {false};
-
-  // Debouncing
-  unsigned long lastBtnTime = 0;
+    int  selectedIndex = 0;
+    int detailSelectedIndex = 0;
+    int  scrollOffset  = 0;
+    int  detailScrollOffset = 0;
+    bool detailView    = false;
+    bool buzzerActive[MAX_PERSONS]     = {false};
+    bool buzzerAcked[MAX_PERSONS]      = {false};
+    bool doseDelivered[MAX_PERSONS]    = {false};
+    bool waitingForSensor[MAX_PERSONS] = {false};
+    unsigned long lastBtnTime = 0;
+    unsigned long lastUserActivityMs = 0;
+    bool displayOn = true;
 };
 
-// Global app state instance
+
 extern AppState appState;
 extern TFT_eSPI tft;
 extern ESP32Time rtc;

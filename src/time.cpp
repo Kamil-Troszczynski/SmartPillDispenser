@@ -1,6 +1,7 @@
 #include "time.hpp"
 #include "app_state.hpp"
 #include "dfns_consts_libs.hpp"
+#include "screen.hpp"
 
 
 const char* ssid = WIFI_SSID;
@@ -11,11 +12,8 @@ const int daylightOffset_sec = 3600;
 
 
 void sync_time_from_NTP() {
-  tft.fillScreen(C_BG);
-  tft.setTextColor(C_TEXT, C_BG);
-  tft.setTextSize(1);
-  tft.setCursor(10, 20);
-  tft.print("Laczenie z WiFi...");
+  WiFi.mode(WIFI_STA);
+  draw_sync_status("Laczenie z WiFi...", "Prosze czekac", C_HEADER_BG, C_HEADER_TXT);
 
   WiFi.begin(ssid, password);
   int attempts = 0;
@@ -25,26 +23,23 @@ void sync_time_from_NTP() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    tft.setCursor(10, 36);
-    tft.print("Synchronizacja czasu");
+    draw_sync_status("Laczenie z WiFi...", "Synchronizacja czasu", C_HEADER_BG, C_HEADER_TXT);
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     struct tm timeinfo;
     int retries = 0;
-    while (!getLocalTime(&timeinfo) && retries < 10) {
+    bool timeReady = getLocalTime(&timeinfo);
+    while (!timeReady && retries < 10) {
       delay(500);
       retries++;
+      timeReady = getLocalTime(&timeinfo);
     }
-    if (getLocalTime(&timeinfo)) {
+    if (timeReady) {
       rtc.setTimeStruct(timeinfo);
-      tft.setTextColor(C_ACTIVE_BG, C_BG);
-      tft.setCursor(10, 52);
-      tft.print("OK");
+      draw_sync_status("Czas ustawiony", "OK", C_ACTIVE_BG, C_ACTIVE_TXT);
       delay(800);
     }
   } else {
-    tft.setCursor(10, 36);
-    tft.setTextColor(TFT_RED, C_BG);
-    tft.print("Brak WiFi!");
+    draw_sync_status("Brak WiFi!", "Uzywam lokalnego czasu", C_WARN_BG, C_WARN_TXT);
     delay(1500);
   }
 

@@ -1,9 +1,9 @@
 #pragma once
-
-#include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
+void mqtt_init(const char* broker_host, int broker_port,  const char* topic_sync, const char* topic_confirmation);
+void mqtt_loop();
+void mqtt_publish_confirmation(int dts_id, int dosage);
 
-void on_message(char* topic, byte* payload, unsigned int length);
-void connect_mqtt();
+extern bool syncReceived;
