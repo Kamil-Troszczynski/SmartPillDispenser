@@ -16,6 +16,13 @@ The project will involve creating an intelligent dispenser for supplements or va
 ### Electronic diagram
 [Electronic diagram](assets/electronic_diagram_first_version.png) is available here. 
 
+### Final prototype
+<p>
+  <img src="assets/photo_front.jpeg" alt="vscode" width="352" height="200"/>
+  <img src="assets/photo_chamber.jpeg" alt="vscode" width="137" height="200"/>
+</p>
+
+
 ### Instruction how to setup it
 - Install Platform.io in Visual Studio Code as extension
 - Build environment 
